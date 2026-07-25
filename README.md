@@ -21,6 +21,20 @@ The health check is available at `GET /v1/health`.
 for a reproducible installation; do not use `npm update` without an explicit
 dependency-update task and test run.
 
+## Local PostgreSQL
+
+Copy the local-only environment template and start PostgreSQL with Docker:
+
+```powershell
+Copy-Item .env.example .env
+npm.cmd run db:up
+```
+
+Check that the container is healthy with `docker compose ps`. Stop it with
+`npm.cmd run db:down`; the named Docker volume preserves local database data.
+Use `docker compose down -v` only when you deliberately want to remove all local
+database data.
+
 ## Initial module boundaries
 
 - `health` — liveness/readiness endpoint.
