@@ -4,7 +4,7 @@ import {drizzle, type NodePgDatabase} from 'drizzle-orm/node-postgres';
 import {Pool} from 'pg';
 
 import {Service} from '../../common/enums';
-import type {EnvironmentVariables} from '../../config/interfaces';
+import type {IEnvironmentVariables} from '../../config/interfaces';
 import {DatabaseService} from './database.service';
 
 @Global()
@@ -13,7 +13,7 @@ import {DatabaseService} from './database.service';
     {
       provide: Service.PostgresPool,
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<EnvironmentVariables, true>): Pool =>
+      useFactory: (configService: ConfigService<IEnvironmentVariables, true>): Pool =>
         new Pool({
           connectionString: configService.getOrThrow('DATABASE_URL'),
           max: 10,
@@ -24,8 +24,11 @@ import {DatabaseService} from './database.service';
       inject: [Service.PostgresPool],
       useFactory: (pool: Pool): NodePgDatabase => drizzle({client: pool}),
     },
-    DatabaseService,
+    {
+      provide: Service.Database,
+      useClass: DatabaseService,
+    },
   ],
-  exports: [DatabaseService, Service.Drizzle],
+  exports: [Service.Database, Service.Drizzle],
 })
 export class DatabaseModule {}

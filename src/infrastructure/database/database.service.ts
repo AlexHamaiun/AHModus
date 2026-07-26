@@ -6,8 +6,12 @@ import type {Pool} from 'pg';
 
 import {Service} from '../../common/enums';
 
+interface IDatabaseService {
+  checkConnection(): Promise<void>;
+}
+
 @Injectable()
-export class DatabaseService implements OnApplicationShutdown {
+class DatabaseService implements IDatabaseService, OnApplicationShutdown {
   constructor(
     @Inject(Service.Drizzle) private readonly database: NodePgDatabase,
     @Inject(Service.PostgresPool) private readonly pool: Pool,
@@ -21,3 +25,5 @@ export class DatabaseService implements OnApplicationShutdown {
     await this.pool.end();
   }
 }
+
+export {type IDatabaseService, DatabaseService};

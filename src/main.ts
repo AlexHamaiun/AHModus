@@ -3,11 +3,11 @@ import {ConfigService} from '@nestjs/config';
 import {NestFactory} from '@nestjs/core';
 
 import {AppModule} from './app.module';
-import type {EnvironmentVariables} from './config/interfaces';
+import type {IEnvironmentVariables} from './config/interfaces';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get<ConfigService<EnvironmentVariables, true>>(ConfigService);
+  const configService = app.get<ConfigService<IEnvironmentVariables, true>>(ConfigService);
 
   app.setGlobalPrefix('v1');
   app.useGlobalPipes(

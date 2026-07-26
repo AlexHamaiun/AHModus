@@ -1,6 +1,17 @@
 enum Service {
+  Database = 'database',
   Drizzle = 'drizzle',
   PostgresPool = 'postgresPool',
+  Rules = 'rules',
 }
 
-export {Service};
+enum Repository {
+  Rules = 'rulesRepository',
+}
+
+enum Resource {
+  Health = 'health',
+  Rules = 'rules',
+}
+
+export {Repository, Resource, Service};

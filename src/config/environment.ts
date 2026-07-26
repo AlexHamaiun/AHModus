@@ -1,6 +1,6 @@
-import type {EnvironmentVariables} from './interfaces';
+import type {IEnvironmentVariables} from './interfaces';
 
-export function validateEnvironment(config: Record<string, unknown>): EnvironmentVariables {
+export function validateEnvironment(config: Record<string, unknown>): IEnvironmentVariables {
   const databaseUrl = getRequiredString(config, 'DATABASE_URL');
   const port = getPort(config.PORT);
 

@@ -1,2 +1,5 @@
-// Add only system-wide shared types here.
-export {};
+type TransactionOptions = {
+  readonly useTransaction?: boolean;
+};
+
+export {type TransactionOptions};
