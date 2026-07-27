@@ -1,12 +1,11 @@
 import {ConflictException} from '@nestjs/common';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 
 import type {IBaseService} from '../../common/interfaces';
 import type {TransactionOptions} from '../../common/types';
+import type {IDatabaseService} from './database.service';
 import {PostgresErrorCode} from './enums';
 import type {IBaseRepository} from './interfaces';
 import {hasPostgresErrorCode} from './postgres-error.guard';
-import type {DatabaseExecutor} from './types';
 
 export abstract class BaseService<
   TEntity,
@@ -16,7 +15,7 @@ export abstract class BaseService<
   TId = string,
 > implements IBaseService<TEntity, TCreateInput, TUpdateInput, TCreateResult, TId> {
   protected constructor(
-    private readonly database: NodePgDatabase,
+    private readonly databaseService: IDatabaseService,
     private readonly repository: IBaseRepository<
       TEntity,
       TCreateInput,
@@ -29,40 +28,37 @@ export abstract class BaseService<
 
   async create(input: TCreateInput, options?: TransactionOptions): Promise<TCreateResult> {
     try {
-      return await this.executeMutation(
-        (executor) => this.repository.create(executor, input),
-        options,
-      );
+      return await this.executeMutation(() => this.repository.create(input), options);
     } catch (error: unknown) {
       this.throwCreateError(error, input);
     }
   }
 
   async findAll(): Promise<readonly TEntity[]> {
-    return this.repository.findAll(this.database);
+    return this.repository.findAll();
   }
 
   async findById(id: TId): Promise<TEntity | undefined> {
-    return this.repository.findById(this.database, id);
+    return this.repository.findById(id);
   }
 
   async remove(id: TId, options?: TransactionOptions): Promise<TEntity> {
-    return this.executeMutation((executor) => this.repository.remove(executor, id), options);
+    return this.executeMutation(() => this.repository.remove(id), options);
   }
 
   async update(id: TId, input: TUpdateInput, options?: TransactionOptions): Promise<TEntity> {
-    return this.executeMutation((executor) => this.repository.update(executor, id, input), options);
+    return this.executeMutation(() => this.repository.update(id, input), options);
   }
 
   protected async executeMutation<TResult>(
-    operation: (executor: DatabaseExecutor) => Promise<TResult>,
+    operation: () => Promise<TResult>,
     options?: TransactionOptions,
   ): Promise<TResult> {
     if (options?.useTransaction === false) {
-      return operation(this.database);
+      return operation();
     }
 
-    return this.database.transaction((transaction) => operation(transaction));
+    return this.databaseService.executeInTransaction(operation);
   }
 
   protected getDuplicateCreateMessage(input: TCreateInput): string {

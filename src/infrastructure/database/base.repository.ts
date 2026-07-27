@@ -1,5 +1,4 @@
-import {InternalServerErrorException} from '@nestjs/common';
-
+import type {IDatabaseService} from './database.service';
 import type {IBaseRepository} from './interfaces';
 import type {DatabaseExecutor} from './types';
 
@@ -10,22 +9,15 @@ export abstract class BaseRepository<
   TCreateResult = TEntity,
   TId = string,
 > implements IBaseRepository<TEntity, TCreateInput, TUpdateInput, TCreateResult, TId> {
-  abstract create(executor: DatabaseExecutor, input: TCreateInput): Promise<TCreateResult>;
-  abstract findAll(executor: DatabaseExecutor): Promise<readonly TEntity[]>;
-  abstract findById(executor: DatabaseExecutor, id: TId): Promise<TEntity | undefined>;
-  abstract remove(executor: DatabaseExecutor, id: TId): Promise<TEntity>;
-  abstract update(executor: DatabaseExecutor, id: TId, input: TUpdateInput): Promise<TEntity>;
+  protected constructor(private readonly databaseService: IDatabaseService) {}
 
-  protected getSingleResultOrThrow<TResult>(
-    entities: readonly TResult[],
-    entityName: string,
-  ): TResult {
-    if (entities.length !== 1) {
-      throw new InternalServerErrorException(
-        `Expected exactly one entity "${entityName}" from the database, received ${entities.length}.`,
-      );
-    }
+  abstract create(input: TCreateInput): Promise<TCreateResult>;
+  abstract findAll(): Promise<readonly TEntity[]>;
+  abstract findById(id: TId): Promise<TEntity | undefined>;
+  abstract remove(id: TId): Promise<TEntity>;
+  abstract update(id: TId, input: TUpdateInput): Promise<TEntity>;
 
-    return entities[0]!;
+  protected get database(): DatabaseExecutor {
+    return this.databaseService.getExecutor();
   }
 }

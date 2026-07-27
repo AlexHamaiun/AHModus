@@ -1,4 +1,4 @@
-import {Body, Controller, HttpCode, HttpStatus, Inject, Post} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post} from '@nestjs/common';
 
 import {BaseController} from '../../common/base.controller';
 import {Resource, Service} from '../../common/enums';
@@ -13,7 +13,7 @@ export class RulesController extends BaseController<
   UpdateRuleInput,
   RuleDraft
 > {
-  constructor(@Inject(Service.Rules) rulesService: IRulesService) {
+  constructor(@Inject(Service.Rules) private readonly rulesService: IRulesService) {
     super(rulesService);
   }
 
@@ -21,5 +21,15 @@ export class RulesController extends BaseController<
   @HttpCode(HttpStatus.CREATED)
   createRule(@Body() createRuleDto: CreateRuleDto): Promise<RuleDraft> {
     return this.create(createRuleDto);
+  }
+
+  @Get()
+  findRules(): Promise<readonly Rule[]> {
+    return this.findAll();
+  }
+
+  @Get(':key')
+  findRuleByKey(@Param('key') key: string): Promise<Rule> {
+    return this.rulesService.findByKey(key);
   }
 }

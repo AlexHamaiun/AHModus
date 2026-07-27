@@ -1,20 +1,35 @@
-import {Injectable} from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import {and, asc, eq, isNull} from 'drizzle-orm';
 
+import {Service} from '../../common/enums';
+import {DatabaseAssertions} from '../../infrastructure/database/assertions/database.assertions';
 import {BaseRepository} from '../../infrastructure/database/base.repository';
+import type {IDatabaseService} from '../../infrastructure/database/database.service';
+import type {IBaseRepository} from '../../infrastructure/database/interfaces';
 import {rules, ruleVersions} from '../../infrastructure/database/schema';
-import type {DatabaseExecutor} from '../../infrastructure/database/types';
-import type {IRulesRepository} from './interfaces';
 import {RuleEntityName} from './enums';
 import type {CreateRuleInput, Rule, RuleDraft, UpdateRuleInput} from './types';
 
+interface IRulesRepository extends IBaseRepository<
+  Rule,
+  CreateRuleInput,
+  UpdateRuleInput,
+  RuleDraft
+> {
+  findByKey(key: string): Promise<Rule | undefined>;
+}
+
 @Injectable()
-export class RulesRepository
+class RulesRepository
   extends BaseRepository<Rule, CreateRuleInput, UpdateRuleInput, RuleDraft>
   implements IRulesRepository
 {
-  async create(executor: DatabaseExecutor, input: CreateRuleInput): Promise<RuleDraft> {
-    const insertedRules = await executor
+  constructor(@Inject(Service.Database) databaseService: IDatabaseService) {
+    super(databaseService);
+  }
+
+  async create(input: CreateRuleInput): Promise<RuleDraft> {
+    const insertedRules = await this.database
       .insert(rules)
       .values({
         description: input.description,
@@ -22,9 +37,9 @@ export class RulesRepository
         name: input.name,
       })
       .returning();
-    const rule = this.getSingleResultOrThrow(insertedRules, RuleEntityName.Rule);
+    const rule = DatabaseAssertions.requireSingleResult(insertedRules, RuleEntityName.Rule);
 
-    const insertedRuleVersions = await executor
+    const insertedRuleVersions = await this.database
       .insert(ruleVersions)
       .values({
         expression: input.expression,
@@ -32,21 +47,24 @@ export class RulesRepository
         version: 1,
       })
       .returning();
-    const version = this.getSingleResultOrThrow(insertedRuleVersions, RuleEntityName.RuleVersion);
+    const version = DatabaseAssertions.requireSingleResult(
+      insertedRuleVersions,
+      RuleEntityName.RuleVersion,
+    );
 
     return {rule, version};
   }
 
-  async findAll(executor: DatabaseExecutor): Promise<readonly Rule[]> {
-    return executor
+  async findAll(): Promise<readonly Rule[]> {
+    return this.database
       .select()
       .from(rules)
       .where(isNull(rules.archivedAt))
       .orderBy(asc(rules.createdAt));
   }
 
-  async findById(executor: DatabaseExecutor, id: string): Promise<Rule | undefined> {
-    const [rule] = await executor
+  async findById(id: string): Promise<Rule | undefined> {
+    const [rule] = await this.database
       .select()
       .from(rules)
       .where(and(eq(rules.id, id), isNull(rules.archivedAt)));
@@ -54,8 +72,17 @@ export class RulesRepository
     return rule;
   }
 
-  async remove(executor: DatabaseExecutor, id: string): Promise<Rule> {
-    const archivedRules = await executor
+  async findByKey(key: string): Promise<Rule | undefined> {
+    const [rule] = await this.database
+      .select()
+      .from(rules)
+      .where(and(eq(rules.key, key), isNull(rules.archivedAt)));
+
+    return rule;
+  }
+
+  async remove(id: string): Promise<Rule> {
+    const archivedRules = await this.database
       .update(rules)
       .set({
         archivedAt: new Date(),
@@ -64,11 +91,11 @@ export class RulesRepository
       .where(and(eq(rules.id, id), isNull(rules.archivedAt)))
       .returning();
 
-    return this.getSingleResultOrThrow(archivedRules, RuleEntityName.Rule);
+    return DatabaseAssertions.requireSingleResult(archivedRules, RuleEntityName.Rule);
   }
 
-  async update(executor: DatabaseExecutor, id: string, input: UpdateRuleInput): Promise<Rule> {
-    const updatedRules = await executor
+  async update(id: string, input: UpdateRuleInput): Promise<Rule> {
+    const updatedRules = await this.database
       .update(rules)
       .set({
         description: input.description,
@@ -78,6 +105,8 @@ export class RulesRepository
       .where(and(eq(rules.id, id), isNull(rules.archivedAt)))
       .returning();
 
-    return this.getSingleResultOrThrow(updatedRules, RuleEntityName.Rule);
+    return DatabaseAssertions.requireSingleResult(updatedRules, RuleEntityName.Rule);
   }
 }
+
+export {type IRulesRepository, RulesRepository};

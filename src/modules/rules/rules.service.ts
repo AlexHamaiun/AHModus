@@ -1,16 +1,18 @@
 import {Inject, Injectable} from '@nestjs/common';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 
+import {EntityAssertions} from '../../common/assertions/entity.assertions';
 import {Repository, Service} from '../../common/enums';
 import type {IBaseService} from '../../common/interfaces';
 import type {TransactionOptions} from '../../common/types';
 import {BaseService} from '../../infrastructure/database/base.service';
+import type {IDatabaseService} from '../../infrastructure/database/database.service';
 import {RuleEntityName} from './enums';
-import type {IRulesRepository} from './interfaces';
+import type {IRulesRepository} from './rules.repository';
 import type {CreateRuleInput, Rule, RuleDraft, UpdateRuleInput} from './types';
 
 interface IRulesService extends IBaseService<Rule, CreateRuleInput, UpdateRuleInput, RuleDraft> {
   create(input: CreateRuleInput, options?: TransactionOptions): Promise<RuleDraft>;
+  findByKey(key: string): Promise<Rule>;
 }
 
 @Injectable()
@@ -19,10 +21,16 @@ class RulesService
   implements IRulesService
 {
   constructor(
-    @Inject(Service.Drizzle) database: NodePgDatabase,
-    @Inject(Repository.Rules) rulesRepository: IRulesRepository,
+    @Inject(Service.Database) databaseService: IDatabaseService,
+    @Inject(Repository.Rules) private readonly rulesRepository: IRulesRepository,
   ) {
-    super(database, rulesRepository, RuleEntityName.Rule);
+    super(databaseService, rulesRepository, RuleEntityName.Rule);
+  }
+
+  async findByKey(key: string): Promise<Rule> {
+    const rule = await this.rulesRepository.findByKey(key);
+
+    return EntityAssertions.require(rule, RuleEntityName.Rule, 'key', key);
   }
 
   protected override getDuplicateCreateMessage(createRuleInput: CreateRuleInput): string {
