@@ -1,5 +1,5 @@
 import {Inject, Injectable} from '@nestjs/common';
-import {and, asc, eq, isNull} from 'drizzle-orm';
+import {and, asc, desc, eq, isNull} from 'drizzle-orm';
 
 import {Service} from '../../common/enums';
 import {DatabaseAssertions} from '../../infrastructure/database/assertions/database.assertions';
@@ -8,7 +8,14 @@ import type {IDatabaseService} from '../../infrastructure/database/database.serv
 import type {IBaseRepository} from '../../infrastructure/database/interfaces';
 import {rules, ruleVersions} from '../../infrastructure/database/schema';
 import {RuleEntityName} from './enums';
-import type {CreateRuleInput, Rule, RuleDraft, UpdateRuleInput} from './types';
+import type {
+  CreateRuleInput,
+  CreateRuleVersionInput,
+  Rule,
+  RuleDraft,
+  RuleVersion,
+  UpdateRuleInput,
+} from './types';
 
 interface IRulesRepository extends IBaseRepository<
   Rule,
@@ -16,7 +23,10 @@ interface IRulesRepository extends IBaseRepository<
   UpdateRuleInput,
   RuleDraft
 > {
+  createNextVersion(ruleId: string, input: CreateRuleVersionInput): Promise<RuleVersion>;
   findByKey(key: string): Promise<Rule | undefined>;
+  findByKeyForUpdate(key: string): Promise<Rule | undefined>;
+  findVersionsByRuleId(ruleId: string): Promise<readonly RuleVersion[]>;
 }
 
 @Injectable()
@@ -55,6 +65,27 @@ class RulesRepository
     return {rule, version};
   }
 
+  async createNextVersion(ruleId: string, input: CreateRuleVersionInput): Promise<RuleVersion> {
+    const [latestVersion] = await this.database
+      .select({version: ruleVersions.version})
+      .from(ruleVersions)
+      .where(eq(ruleVersions.ruleId, ruleId))
+      .orderBy(desc(ruleVersions.version))
+      .limit(1);
+    const nextVersion = latestVersion === undefined ? 1 : latestVersion.version + 1;
+
+    const insertedRuleVersions = await this.database
+      .insert(ruleVersions)
+      .values({
+        expression: input.expression,
+        ruleId,
+        version: nextVersion,
+      })
+      .returning();
+
+    return DatabaseAssertions.requireSingleResult(insertedRuleVersions, RuleEntityName.RuleVersion);
+  }
+
   async findAll(): Promise<readonly Rule[]> {
     return this.database
       .select()
@@ -79,6 +110,24 @@ class RulesRepository
       .where(and(eq(rules.key, key), isNull(rules.archivedAt)));
 
     return rule;
+  }
+
+  async findByKeyForUpdate(key: string): Promise<Rule | undefined> {
+    const [rule] = await this.database
+      .select()
+      .from(rules)
+      .where(and(eq(rules.key, key), isNull(rules.archivedAt)))
+      .for('update');
+
+    return rule;
+  }
+
+  async findVersionsByRuleId(ruleId: string): Promise<readonly RuleVersion[]> {
+    return this.database
+      .select()
+      .from(ruleVersions)
+      .where(eq(ruleVersions.ruleId, ruleId))
+      .orderBy(asc(ruleVersions.version));
   }
 
   async remove(id: string): Promise<Rule> {

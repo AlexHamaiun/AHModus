@@ -14,6 +14,10 @@ type CreateRuleInput = {
   readonly name: string;
 };
 
+type CreateRuleVersionInput = {
+  readonly expression: string;
+};
+
 type RuleDraft = {
   readonly rule: Rule;
   readonly version: RuleVersion;
@@ -26,6 +30,7 @@ type UpdateRuleInput = {
 
 export {
   type CreateRuleInput,
+  type CreateRuleVersionInput,
   type NewRule,
   type NewRuleVersion,
   type Rule,
