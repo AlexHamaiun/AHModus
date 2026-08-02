@@ -4,8 +4,10 @@ import {Repository, Service} from '../../common/enums';
 import {RulesController} from './rules.controller';
 import {RulesRepository} from './rules.repository';
 import {RulesService} from './rules.service';
+import {RuleValidationModule} from '../rule-validation/rule-validation.module';
 
 @Module({
+  imports: [RuleValidationModule],
   controllers: [RulesController],
   providers: [
     {

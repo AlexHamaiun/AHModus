@@ -2,6 +2,8 @@ enum Service {
   Database = 'database',
   Drizzle = 'drizzle',
   PostgresPool = 'postgresPool',
+  RuleExpressionAstValidator = 'ruleExpressionAstValidator',
+  RuleExpressionParser = 'ruleExpressionParser',
   Rules = 'rules',
 }
 
