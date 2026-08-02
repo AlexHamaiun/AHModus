@@ -5,8 +5,8 @@ while validated rules execute deterministically outside the LLM runtime path.
 
 ## Requirements
 
-- Node.js `26.5.0` or newer
-- npm `11.17.0` or newer
+- Node.js `26.5.0`
+- npm `11.17.0`
 
 ## Start
 
@@ -20,6 +20,41 @@ The health check is available at `GET /v1/health`.
 `package-lock.json` is committed and all package versions are exact. Use `npm ci`
 for a reproducible installation; do not use `npm update` without an explicit
 dependency-update task and test run.
+
+## Verification
+
+Run the unit test suite:
+
+```powershell
+npm.cmd test
+```
+
+The current tests cover the DSL parser and AST security validator. They verify
+that the DSL accepts its intended expression subset and rejects malformed
+syntax, multiple expressions, function calls, unsafe member access, unsupported
+operators and overly complex ASTs.
+
+Run the static quality checks before committing changes:
+
+```powershell
+npm.cmd run lint
+npm.cmd run build
+```
+
+## Current DSL validation status
+
+`rule-validation` is an isolated, tested boundary. It parses exactly one DSL
+expression and applies a strict AST allowlist before any future evaluator can
+consume the expression. The allowed subset includes literals, member access,
+arithmetic, comparisons, logical operators and ternary expressions.
+
+The validator does not execute JavaScript. Function calls, computed member
+access, prototype-related property names, unsupported operators and expressions
+that exceed AST complexity limits are rejected.
+
+API integration is intentionally pending: the next validation layer will check
+referenced paths against the developer-defined context schema. Until then, rule
+versions are drafts and are not marked as validated or published.
 
 ## Local PostgreSQL
 
@@ -79,7 +114,8 @@ npm.cmd run db:generate:custom -- --name=backfill-rule-status
 ## Initial module boundaries
 
 - `health` — liveness/readiness endpoint.
-- `rules` — rule definitions, versions, publishing and rollback (next milestone).
+- `rules` — rule definitions and immutable draft versions.
+- `rule-validation` — deterministic DSL parsing and AST security validation.
 - Future modules: `ai-authoring`, `simulations`, `audit`, `projects`.
 
 At runtime the SDK will execute a locally cached, prevalidated rule; OpenAI will only
