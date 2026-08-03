@@ -2,6 +2,7 @@ import {Module} from '@nestjs/common';
 
 import {Service} from '../../common/enums';
 import {RuleExpressionAstValidatorService} from './ast/rule-expression-ast-validator.service';
+import {ContextSchemaPathValidatorService} from './context/context-schema-path-validator.service';
 import {RuleExpressionParserService} from './parser/rule-expression-parser.service';
 
 @Module({
@@ -14,8 +15,16 @@ import {RuleExpressionParserService} from './parser/rule-expression-parser.servi
       provide: Service.RuleExpressionAstValidator,
       useClass: RuleExpressionAstValidatorService,
     },
+    {
+      provide: Service.ContextSchemaPathValidator,
+      useClass: ContextSchemaPathValidatorService,
+    },
   ],
-  exports: [Service.RuleExpressionAstValidator, Service.RuleExpressionParser],
+  exports: [
+    Service.ContextSchemaPathValidator,
+    Service.RuleExpressionAstValidator,
+    Service.RuleExpressionParser,
+  ],
 })
 class RuleValidationModule {}
 
