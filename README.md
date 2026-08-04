@@ -29,10 +29,11 @@ Run the unit test suite:
 npm.cmd test
 ```
 
-The current tests cover the DSL parser and AST security validator. They verify
-that the DSL accepts its intended expression subset and rejects malformed
-syntax, multiple expressions, function calls, unsafe member access, unsupported
-operators and overly complex ASTs.
+The current tests cover the DSL parser, AST security validator, Context Schema
+path validator and static type validator. They verify that the DSL accepts its
+intended expression subset and rejects malformed syntax, multiple expressions,
+function calls, unsafe member access, unsupported operators, overly complex
+ASTs, unknown context paths and incompatible operand types.
 
 Run the static quality checks before committing changes:
 
@@ -43,8 +44,10 @@ npm.cmd run build
 
 ## Current DSL validation status
 
-`rule-validation` is an isolated, tested boundary. It parses exactly one DSL
-expression and applies a strict AST allowlist before any future evaluator can
+`rule-validation` is an isolated, tested boundary. Its single public validation
+pipeline parses exactly one DSL expression, applies a strict AST allowlist,
+checks every referenced context path against the developer-defined Context
+Schema and validates operator type compatibility before any future evaluator can
 consume the expression. The allowed subset includes literals, member access,
 arithmetic, comparisons, logical operators and ternary expressions.
 
@@ -52,9 +55,8 @@ The validator does not execute JavaScript. Function calls, computed member
 access, prototype-related property names, unsupported operators and expressions
 that exceed AST complexity limits are rejected.
 
-API integration is intentionally pending: the next validation layer will check
-referenced paths against the developer-defined context schema. Until then, rule
-versions are drafts and are not marked as validated or published.
+API integration is intentionally pending; rule versions remain drafts and are
+not marked as validated or published.
 
 ## Local PostgreSQL
 

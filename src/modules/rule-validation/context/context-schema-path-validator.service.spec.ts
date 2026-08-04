@@ -1,4 +1,5 @@
 import {RuleExpressionParserService} from '../parser/rule-expression-parser.service';
+import {ContextSchemaPathResolverService} from './context-schema-path-resolver.service';
 import {
   ContextSchemaNodeKind,
   ContextSchemaPathValidationDiagnosticCode,
@@ -9,7 +10,7 @@ import type {ContextSchema} from './types';
 
 describe('ContextSchemaPathValidatorService', () => {
   const parser = new RuleExpressionParserService();
-  const validator = new ContextSchemaPathValidatorService();
+  const validator = new ContextSchemaPathValidatorService(new ContextSchemaPathResolverService());
   const contextSchema = {
     kind: ContextSchemaNodeKind.Object,
     properties: {

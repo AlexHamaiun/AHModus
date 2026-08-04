@@ -42,6 +42,20 @@ type ContextSchemaPathValidationSuccess = {
   readonly isValid: true;
 };
 
+type ContextSchemaPathResolutionFailure = {
+  readonly diagnostic: ContextSchemaPathValidationDiagnostic;
+  readonly isSuccess: false;
+};
+
+type ContextSchemaPathResolutionResult =
+  ContextSchemaPathResolutionFailure | ContextSchemaPathResolutionSuccess;
+
+type ContextSchemaPathResolutionSuccess = {
+  readonly contextPath: ContextSchemaPath;
+  readonly isSuccess: true;
+  readonly node: ContextSchemaNode;
+};
+
 export {
   type ContextSchema,
   type ContextSchemaNode,
@@ -52,5 +66,8 @@ export {
   type ContextSchemaPathValidationFailure,
   type ContextSchemaPathValidationResult,
   type ContextSchemaPathValidationSuccess,
+  type ContextSchemaPathResolutionFailure,
+  type ContextSchemaPathResolutionResult,
+  type ContextSchemaPathResolutionSuccess,
   type ContextSchemaValueNode,
 };

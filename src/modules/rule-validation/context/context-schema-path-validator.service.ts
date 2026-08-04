@@ -1,15 +1,10 @@
-import {Injectable} from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import type jsep from 'jsep';
 
+import {Service} from '../../../common/enums';
 import type {RuleExpressionAst} from '../parser/types';
-import {ContextSchemaNodeKind, ContextSchemaPathValidationDiagnosticCode} from './enums';
-import type {
-  ContextSchema,
-  ContextSchemaNode,
-  ContextSchemaPath,
-  ContextSchemaPathValidationFailure,
-  ContextSchemaPathValidationResult,
-} from './types';
+import type {IContextSchemaPathResolverService} from './context-schema-path-resolver.service';
+import type {ContextSchema, ContextSchemaPathValidationResult} from './types';
 
 interface IContextSchemaPathValidatorService {
   validate(ast: RuleExpressionAst, contextSchema: ContextSchema): ContextSchemaPathValidationResult;
@@ -17,6 +12,11 @@ interface IContextSchemaPathValidatorService {
 
 @Injectable()
 class ContextSchemaPathValidatorService implements IContextSchemaPathValidatorService {
+  constructor(
+    @Inject(Service.ContextSchemaPathResolver)
+    private readonly contextSchemaPathResolverService: IContextSchemaPathResolverService,
+  ) {}
+
   validate(
     ast: RuleExpressionAst,
     contextSchema: ContextSchema,
@@ -47,11 +47,10 @@ class ContextSchemaPathValidatorService implements IContextSchemaPathValidatorSe
         );
       }
       case 'Identifier':
-        return this.validateContextPath([(ast as jsep.Identifier).name], contextSchema);
+      case 'MemberExpression':
+        return this.validateContextPath(ast, contextSchema);
       case 'Literal':
         return {isValid: true};
-      case 'MemberExpression':
-        return this.validateMemberExpression(ast as jsep.MemberExpression, contextSchema);
       case 'UnaryExpression':
         return this.validateNode((ast as jsep.UnaryExpression).argument, contextSchema);
       default:
@@ -59,64 +58,17 @@ class ContextSchemaPathValidatorService implements IContextSchemaPathValidatorSe
     }
   }
 
-  private validateMemberExpression(
-    ast: jsep.MemberExpression,
-    contextSchema: ContextSchema,
-  ): ContextSchemaPathValidationResult {
-    const contextPath = this.getContextPath(ast);
-
-    if (contextPath === undefined) {
-      return this.createFailure(
-        ContextSchemaPathValidationDiagnosticCode.InvalidContextPath,
-        'Member access must start with a context root identifier.',
-      );
-    }
-
-    return this.validateContextPath(contextPath, contextSchema);
-  }
-
-  private getContextPath(ast: jsep.MemberExpression): ContextSchemaPath | undefined {
-    const segments: string[] = [];
-    let currentAst: RuleExpressionAst = ast;
-
-    while (currentAst.type === 'MemberExpression') {
-      const memberExpression = currentAst as jsep.MemberExpression;
-
-      if (memberExpression.computed || memberExpression.property.type !== 'Identifier') {
-        return undefined;
-      }
-
-      segments.unshift((memberExpression.property as jsep.Identifier).name);
-      currentAst = memberExpression.object;
-    }
-
-    if (currentAst.type !== 'Identifier') {
-      return undefined;
-    }
-
-    segments.unshift((currentAst as jsep.Identifier).name);
-
-    return segments;
-  }
-
   private validateContextPath(
-    contextPath: ContextSchemaPath,
+    ast: RuleExpressionAst,
     contextSchema: ContextSchema,
   ): ContextSchemaPathValidationResult {
-    let currentNode: ContextSchemaNode = contextSchema;
+    const resolutionResult = this.contextSchemaPathResolverService.resolve(ast, contextSchema);
 
-    for (const segment of contextPath) {
-      if (currentNode.kind !== ContextSchemaNodeKind.Object) {
-        return this.createUnknownContextPathFailure(contextPath);
-      }
-
-      const nextNode: ContextSchemaNode | undefined = currentNode.properties[segment];
-
-      if (nextNode === undefined) {
-        return this.createUnknownContextPathFailure(contextPath);
-      }
-
-      currentNode = nextNode;
+    if (!resolutionResult.isSuccess) {
+      return {
+        diagnostic: resolutionResult.diagnostic,
+        isValid: false,
+      };
     }
 
     return {isValid: true};
@@ -135,25 +87,6 @@ class ContextSchemaPathValidatorService implements IContextSchemaPathValidatorSe
     }
 
     return {isValid: true};
-  }
-
-  private createUnknownContextPathFailure(
-    contextPath: ContextSchemaPath,
-  ): ContextSchemaPathValidationFailure {
-    return this.createFailure(
-      ContextSchemaPathValidationDiagnosticCode.UnknownContextPath,
-      `Context path "${contextPath.join('.')}" is not defined.`,
-    );
-  }
-
-  private createFailure(
-    code: ContextSchemaPathValidationDiagnosticCode,
-    message: string,
-  ): ContextSchemaPathValidationFailure {
-    return {
-      diagnostic: {code, message},
-      isValid: false,
-    };
   }
 }
 
