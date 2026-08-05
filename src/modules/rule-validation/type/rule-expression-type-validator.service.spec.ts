@@ -1,6 +1,6 @@
 import {ContextSchemaPathResolverService} from '../context/context-schema-path-resolver.service';
-import {ContextSchemaNodeKind, ContextSchemaValueType} from '../context/enums';
-import type {ContextSchema} from '../context/types';
+import {ContextSchemaNodeKind, ContextSchemaValueType} from '../../context-schemas/enums';
+import type {ContextSchemaDefinition} from '../../context-schemas/types';
 import {RuleExpressionParserService} from '../parser/rule-expression-parser.service';
 import {RuleExpressionTypeValidationDiagnosticCode} from './enums';
 import {RuleExpressionTypeValidatorService} from './rule-expression-type-validator.service';
@@ -39,7 +39,7 @@ describe('RuleExpressionTypeValidatorService', () => {
         },
       },
     },
-  } satisfies ContextSchema;
+  } satisfies ContextSchemaDefinition;
 
   const parseAst = (expression: string) => {
     const result = parser.parse(expression);

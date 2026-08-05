@@ -4,6 +4,7 @@ enum Service {
   PostgresPool = 'postgresPool',
   ContextSchemaPathResolver = 'contextSchemaPathResolver',
   ContextSchemaPathValidator = 'contextSchemaPathValidator',
+  ContextSchemaValidator = 'contextSchemaValidator',
   RuleExpressionAstValidator = 'ruleExpressionAstValidator',
   RuleExpressionParser = 'ruleExpressionParser',
   RuleExpressionValidation = 'ruleExpressionValidation',

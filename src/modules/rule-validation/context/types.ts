@@ -1,27 +1,6 @@
-import {
-  ContextSchemaNodeKind,
-  ContextSchemaPathValidationDiagnosticCode,
-  ContextSchemaValueType,
-} from './enums';
+import type {ContextSchemaNode} from '../../context-schemas/types';
 
-type ContextSchema = ContextSchemaObjectNode;
-
-type ContextSchemaNode = ContextSchemaObjectNode | ContextSchemaValueNode;
-
-type ContextSchemaNodeOptions = {
-  readonly nullable?: boolean;
-  readonly optional?: boolean;
-};
-
-type ContextSchemaObjectNode = ContextSchemaNodeOptions & {
-  readonly kind: ContextSchemaNodeKind.Object;
-  readonly properties: Readonly<Record<string, ContextSchemaNode>>;
-};
-
-type ContextSchemaValueNode = ContextSchemaNodeOptions & {
-  readonly kind: ContextSchemaNodeKind.Value;
-  readonly valueType: ContextSchemaValueType;
-};
+import type {ContextSchemaPathValidationDiagnosticCode} from './enums';
 
 type ContextSchemaPath = readonly string[];
 
@@ -57,17 +36,12 @@ type ContextSchemaPathResolutionSuccess = {
 };
 
 export {
-  type ContextSchema,
-  type ContextSchemaNode,
-  type ContextSchemaNodeOptions,
-  type ContextSchemaObjectNode,
   type ContextSchemaPath,
+  type ContextSchemaPathResolutionFailure,
+  type ContextSchemaPathResolutionResult,
+  type ContextSchemaPathResolutionSuccess,
   type ContextSchemaPathValidationDiagnostic,
   type ContextSchemaPathValidationFailure,
   type ContextSchemaPathValidationResult,
   type ContextSchemaPathValidationSuccess,
-  type ContextSchemaPathResolutionFailure,
-  type ContextSchemaPathResolutionResult,
-  type ContextSchemaPathResolutionSuccess,
-  type ContextSchemaValueNode,
 };

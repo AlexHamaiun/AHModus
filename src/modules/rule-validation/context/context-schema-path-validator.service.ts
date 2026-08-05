@@ -2,12 +2,16 @@ import {Inject, Injectable} from '@nestjs/common';
 import type jsep from 'jsep';
 
 import {Service} from '../../../common/enums';
+import type {ContextSchemaDefinition} from '../../context-schemas/types';
 import type {RuleExpressionAst} from '../parser/types';
 import type {IContextSchemaPathResolverService} from './context-schema-path-resolver.service';
-import type {ContextSchema, ContextSchemaPathValidationResult} from './types';
+import type {ContextSchemaPathValidationResult} from './types';
 
 interface IContextSchemaPathValidatorService {
-  validate(ast: RuleExpressionAst, contextSchema: ContextSchema): ContextSchemaPathValidationResult;
+  validate(
+    ast: RuleExpressionAst,
+    contextSchema: ContextSchemaDefinition,
+  ): ContextSchemaPathValidationResult;
 }
 
 @Injectable()
@@ -19,14 +23,14 @@ class ContextSchemaPathValidatorService implements IContextSchemaPathValidatorSe
 
   validate(
     ast: RuleExpressionAst,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): ContextSchemaPathValidationResult {
     return this.validateNode(ast, contextSchema);
   }
 
   private validateNode(
     ast: RuleExpressionAst,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): ContextSchemaPathValidationResult {
     switch (ast.type) {
       case 'BinaryExpression': {
@@ -60,7 +64,7 @@ class ContextSchemaPathValidatorService implements IContextSchemaPathValidatorSe
 
   private validateContextPath(
     ast: RuleExpressionAst,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): ContextSchemaPathValidationResult {
     const resolutionResult = this.contextSchemaPathResolverService.resolve(ast, contextSchema);
 
@@ -76,7 +80,7 @@ class ContextSchemaPathValidatorService implements IContextSchemaPathValidatorSe
 
   private validateNodes(
     asts: readonly RuleExpressionAst[],
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): ContextSchemaPathValidationResult {
     for (const ast of asts) {
       const result = this.validateNode(ast, contextSchema);

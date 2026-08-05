@@ -1,15 +1,18 @@
 import {Inject, Injectable} from '@nestjs/common';
 
 import {Service} from '../../common/enums';
+import type {ContextSchemaDefinition} from '../context-schemas/types';
 import type {IRuleExpressionAstValidatorService} from './ast/rule-expression-ast-validator.service';
 import type {IContextSchemaPathValidatorService} from './context/context-schema-path-validator.service';
-import type {ContextSchema} from './context/types';
 import type {IRuleExpressionParserService} from './parser/rule-expression-parser.service';
 import type {IRuleExpressionTypeValidatorService} from './type/rule-expression-type-validator.service';
 import type {RuleExpressionValidationResult} from './types';
 
 interface IRuleExpressionValidationService {
-  validate(expression: string, contextSchema: ContextSchema): RuleExpressionValidationResult;
+  validate(
+    expression: string,
+    contextSchema: ContextSchemaDefinition,
+  ): RuleExpressionValidationResult;
 }
 
 @Injectable()
@@ -25,7 +28,10 @@ class RuleExpressionValidationService implements IRuleExpressionValidationServic
     private readonly ruleExpressionTypeValidatorService: IRuleExpressionTypeValidatorService,
   ) {}
 
-  validate(expression: string, contextSchema: ContextSchema): RuleExpressionValidationResult {
+  validate(
+    expression: string,
+    contextSchema: ContextSchemaDefinition,
+  ): RuleExpressionValidationResult {
     const parseResult = this.ruleExpressionParserService.parse(expression);
 
     if (!parseResult.isSuccess) {

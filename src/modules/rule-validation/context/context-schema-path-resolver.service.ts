@@ -1,23 +1,29 @@
 import {Injectable} from '@nestjs/common';
 import type jsep from 'jsep';
 
+import {ContextSchemaNodeKind} from '../../context-schemas/enums';
+import type {ContextSchemaDefinition, ContextSchemaNode} from '../../context-schemas/types';
 import type {RuleExpressionAst} from '../parser/types';
-import {ContextSchemaNodeKind, ContextSchemaPathValidationDiagnosticCode} from './enums';
+import {ContextSchemaPathValidationDiagnosticCode} from './enums';
 import type {
-  ContextSchema,
-  ContextSchemaNode,
   ContextSchemaPath,
   ContextSchemaPathResolutionFailure,
   ContextSchemaPathResolutionResult,
 } from './types';
 
 interface IContextSchemaPathResolverService {
-  resolve(ast: RuleExpressionAst, contextSchema: ContextSchema): ContextSchemaPathResolutionResult;
+  resolve(
+    ast: RuleExpressionAst,
+    contextSchema: ContextSchemaDefinition,
+  ): ContextSchemaPathResolutionResult;
 }
 
 @Injectable()
 class ContextSchemaPathResolverService implements IContextSchemaPathResolverService {
-  resolve(ast: RuleExpressionAst, contextSchema: ContextSchema): ContextSchemaPathResolutionResult {
+  resolve(
+    ast: RuleExpressionAst,
+    contextSchema: ContextSchemaDefinition,
+  ): ContextSchemaPathResolutionResult {
     const contextPath = this.getContextPath(ast);
 
     if (contextPath === undefined) {

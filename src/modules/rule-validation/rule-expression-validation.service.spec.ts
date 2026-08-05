@@ -1,13 +1,10 @@
 import {RuleExpressionAstValidationDiagnosticCode} from './ast/enums';
 import {RuleExpressionAstValidatorService} from './ast/rule-expression-ast-validator.service';
+import {ContextSchemaNodeKind, ContextSchemaValueType} from '../context-schemas/enums';
+import type {ContextSchemaDefinition} from '../context-schemas/types';
 import {ContextSchemaPathResolverService} from './context/context-schema-path-resolver.service';
 import {ContextSchemaPathValidatorService} from './context/context-schema-path-validator.service';
-import {
-  ContextSchemaNodeKind,
-  ContextSchemaPathValidationDiagnosticCode,
-  ContextSchemaValueType,
-} from './context/enums';
-import type {ContextSchema} from './context/types';
+import {ContextSchemaPathValidationDiagnosticCode} from './context/enums';
 import {RuleExpressionParserDiagnosticCode} from './parser/enums';
 import {RuleExpressionParserService} from './parser/rule-expression-parser.service';
 import {RuleExpressionTypeValidationDiagnosticCode} from './type/enums';
@@ -43,7 +40,7 @@ describe('RuleExpressionValidationService', () => {
         },
       },
     },
-  } satisfies ContextSchema;
+  } satisfies ContextSchemaDefinition;
 
   it('accepts an expression that passes every validation layer', () => {
     const result = validationService.validate(

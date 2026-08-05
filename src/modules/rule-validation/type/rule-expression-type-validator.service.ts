@@ -2,10 +2,10 @@ import {Inject, Injectable} from '@nestjs/common';
 import type jsep from 'jsep';
 
 import {Service} from '../../../common/enums';
+import {ContextSchemaNodeKind, ContextSchemaValueType} from '../../context-schemas/enums';
+import type {ContextSchemaDefinition, ContextSchemaValueNode} from '../../context-schemas/types';
 import type {RuleExpressionAst} from '../parser/types';
 import type {IContextSchemaPathResolverService} from '../context/context-schema-path-resolver.service';
-import {ContextSchemaNodeKind, ContextSchemaValueType} from '../context/enums';
-import type {ContextSchema, ContextSchemaValueNode} from '../context/types';
 import {RuleExpressionTypeValidationDiagnosticCode, RuleExpressionValueType} from './enums';
 import type {
   RuleExpressionInferredType,
@@ -17,7 +17,7 @@ import type {
 interface IRuleExpressionTypeValidatorService {
   validate(
     ast: RuleExpressionAst,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): RuleExpressionTypeValidationResult;
 }
 
@@ -46,7 +46,7 @@ class RuleExpressionTypeValidatorService implements IRuleExpressionTypeValidator
 
   validate(
     ast: RuleExpressionAst,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): RuleExpressionTypeValidationResult {
     const inferenceResult = this.inferType(ast, contextSchema);
 
@@ -62,7 +62,7 @@ class RuleExpressionTypeValidatorService implements IRuleExpressionTypeValidator
 
   private inferType(
     ast: RuleExpressionAst,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): RuleExpressionTypeInferenceResult {
     switch (ast.type) {
       case 'BinaryExpression':
@@ -89,7 +89,7 @@ class RuleExpressionTypeValidatorService implements IRuleExpressionTypeValidator
 
   private inferBinaryExpressionType(
     ast: jsep.BinaryExpression,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): RuleExpressionTypeInferenceResult {
     const leftResult = this.inferType(ast.left, contextSchema);
 
@@ -146,7 +146,7 @@ class RuleExpressionTypeValidatorService implements IRuleExpressionTypeValidator
 
   private inferConditionalExpressionType(
     ast: jsep.ConditionalExpression,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): RuleExpressionTypeInferenceResult {
     const testResult = this.inferType(ast.test, contextSchema);
 
@@ -193,7 +193,7 @@ class RuleExpressionTypeValidatorService implements IRuleExpressionTypeValidator
 
   private inferContextPathType(
     ast: RuleExpressionAst,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): RuleExpressionTypeInferenceResult {
     const resolutionResult = this.contextSchemaPathResolverService.resolve(ast, contextSchema);
 
@@ -332,7 +332,7 @@ class RuleExpressionTypeValidatorService implements IRuleExpressionTypeValidator
 
   private inferUnaryExpressionType(
     ast: jsep.UnaryExpression,
-    contextSchema: ContextSchema,
+    contextSchema: ContextSchemaDefinition,
   ): RuleExpressionTypeInferenceResult {
     const argumentResult = this.inferType(ast.argument, contextSchema);
 
