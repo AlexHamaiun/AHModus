@@ -21,4 +21,6 @@ import {RuleValidationModule} from '../rule-validation/rule-validation.module';
   ],
   exports: [Service.Rules],
 })
-export class RulesModule {}
+class RulesModule {}
+
+export {RulesModule};

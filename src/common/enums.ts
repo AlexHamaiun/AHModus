@@ -9,14 +9,17 @@ enum Service {
   RuleExpressionParser = 'ruleExpressionParser',
   RuleExpressionValidation = 'ruleExpressionValidation',
   RuleExpressionTypeValidator = 'ruleExpressionTypeValidator',
+  ContextSchemas = 'contextSchemas',
   Rules = 'rules',
 }
 
 enum Repository {
+  ContextSchemas = 'contextSchemasRepository',
   Rules = 'rulesRepository',
 }
 
 enum Resource {
+  ContextSchemas = 'context-schemas',
   Health = 'health',
   Rules = 'rules',
 }

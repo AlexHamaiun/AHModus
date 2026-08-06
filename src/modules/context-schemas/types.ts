@@ -58,17 +58,43 @@ type ContextSchemaValidationSuccess = {
   readonly isValid: true;
 };
 
+type CreateContextSchemaInput = {
+  readonly createdBy?: string;
+  readonly description?: string;
+  readonly definition: ContextSchemaDefinition;
+  readonly key: string;
+  readonly name: string;
+};
+
+type CreateContextSchemaVersionInput = {
+  readonly createdBy?: string;
+  readonly definition: ContextSchemaDefinition;
+};
+
 type NewContextSchema = InferInsertModel<typeof contextSchemas>;
 type NewContextSchemaVersion = InferInsertModel<typeof contextSchemaVersions>;
-type ContextSchemaRecord = InferSelectModel<typeof contextSchemas>;
+type ContextSchema = InferSelectModel<typeof contextSchemas>;
 type ContextSchemaVersion = InferSelectModel<typeof contextSchemaVersions>;
 
+type ContextSchemaDraft = {
+  readonly contextSchema: ContextSchema;
+  readonly version: ContextSchemaVersion;
+};
+
+type UpdateContextSchemaInput = {
+  readonly description?: string | null;
+  readonly name?: string;
+};
+
 export {
+  type CreateContextSchemaInput,
+  type CreateContextSchemaVersionInput,
   type ContextSchemaDefinition,
+  type ContextSchemaDraft,
   type ContextSchemaNode,
   type ContextSchemaNodeOptions,
   type ContextSchemaObjectNode,
-  type ContextSchemaRecord,
+  type ContextSchema,
   type ContextSchemaVersion,
   type ContextSchemaValidationCheckResult,
   type ContextSchemaValidationCheckSuccess,
@@ -80,4 +106,5 @@ export {
   type ContextSchemaValueNode,
   type NewContextSchema,
   type NewContextSchemaVersion,
+  type UpdateContextSchemaInput,
 };

@@ -7,7 +7,7 @@ import {PostgresErrorCode} from './enums';
 import type {IBaseRepository} from './interfaces';
 import {hasPostgresErrorCode} from './postgres-error.guard';
 
-export abstract class BaseService<
+abstract class BaseService<
   TEntity,
   TCreateInput,
   TUpdateInput,
@@ -75,3 +75,5 @@ export abstract class BaseService<
     throw error;
   }
 }
+
+export {BaseService};

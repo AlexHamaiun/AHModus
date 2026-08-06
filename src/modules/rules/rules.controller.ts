@@ -8,12 +8,7 @@ import type {IRulesService} from './rules.service';
 import type {CreateRuleInput, Rule, RuleDraft, RuleVersion, UpdateRuleInput} from './types';
 
 @Controller(Resource.Rules)
-export class RulesController extends BaseController<
-  Rule,
-  CreateRuleInput,
-  UpdateRuleInput,
-  RuleDraft
-> {
+class RulesController extends BaseController<Rule, CreateRuleInput, UpdateRuleInput, RuleDraft> {
   constructor(@Inject(Service.Rules) private readonly rulesService: IRulesService) {
     super(rulesService);
   }
@@ -48,3 +43,5 @@ export class RulesController extends BaseController<
     return this.rulesService.findByKey(key);
   }
 }
+
+export {RulesController};

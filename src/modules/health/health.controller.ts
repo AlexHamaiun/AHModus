@@ -5,7 +5,7 @@ import type {IDatabaseService} from '../../infrastructure/database/database.serv
 import type {DatabaseHealthResponse, HealthResponse} from './types';
 
 @Controller(Resource.Health)
-export class HealthController {
+class HealthController {
   constructor(@Inject(Service.Database) private readonly databaseService: IDatabaseService) {}
 
   @Get()
@@ -34,3 +34,5 @@ export class HealthController {
     };
   }
 }
+
+export {HealthController};

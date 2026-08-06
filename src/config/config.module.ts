@@ -12,4 +12,6 @@ import {validateEnvironment} from './environment';
     }),
   ],
 })
-export class AppConfigModule {}
+class AppConfigModule {}
+
+export {AppConfigModule};

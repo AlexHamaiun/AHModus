@@ -2,7 +2,7 @@ import type {IDatabaseService} from './database.service';
 import type {IBaseRepository} from './interfaces';
 import type {DatabaseExecutor} from './types';
 
-export abstract class BaseRepository<
+abstract class BaseRepository<
   TEntity,
   TCreateInput,
   TUpdateInput,
@@ -21,3 +21,5 @@ export abstract class BaseRepository<
     return this.databaseService.getExecutor();
   }
 }
+
+export {BaseRepository};

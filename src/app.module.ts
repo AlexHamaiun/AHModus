@@ -9,4 +9,6 @@ import {RulesModule} from './modules/rules/rules.module';
 @Module({
   imports: [AppConfigModule, DatabaseModule, ContextSchemasModule, HealthModule, RulesModule],
 })
-export class AppModule {}
+class AppModule {}
+
+export {AppModule};

@@ -31,4 +31,6 @@ import {DatabaseService} from './database.service';
   ],
   exports: [Service.Database, Service.Drizzle],
 })
-export class DatabaseModule {}
+class DatabaseModule {}
+
+export {DatabaseModule};

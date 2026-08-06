@@ -1,7 +1,7 @@
 import type {IBaseService} from './interfaces';
 import type {TransactionOptions} from './types';
 
-export abstract class BaseController<
+abstract class BaseController<
   TEntity,
   TCreateInput,
   TUpdateInput,
@@ -38,3 +38,5 @@ export abstract class BaseController<
     return this.baseService.update(id, input, options);
   }
 }
+
+export {BaseController};
