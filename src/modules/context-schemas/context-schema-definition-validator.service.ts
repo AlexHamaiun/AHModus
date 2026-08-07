@@ -15,12 +15,12 @@ import type {
   ContextSchemaValidationState,
 } from './types';
 
-interface IContextSchemaValidatorService {
+interface IContextSchemaDefinitionValidatorService {
   validate(contextSchema: unknown): ContextSchemaValidationResult;
 }
 
 @Injectable()
-class ContextSchemaValidatorService implements IContextSchemaValidatorService {
+class ContextSchemaDefinitionValidatorService implements IContextSchemaDefinitionValidatorService {
   private readonly unsafeContextPropertyNames = new Set(['__proto__', 'constructor', 'prototype']);
 
   validate(contextSchema: unknown): ContextSchemaValidationResult {
@@ -260,4 +260,4 @@ class ContextSchemaValidatorService implements IContextSchemaValidatorService {
   }
 }
 
-export {type IContextSchemaValidatorService, ContextSchemaValidatorService};
+export {type IContextSchemaDefinitionValidatorService, ContextSchemaDefinitionValidatorService};

@@ -3,6 +3,7 @@ import {Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post} from '
 import {BaseController} from '../../common/base.controller';
 import {Resource, Service} from '../../common/enums';
 import {CreateContextSchemaDto} from './dto/create-context-schema.dto';
+import {CreateContextSchemaVersionDto} from './dto/create-context-schema-version.dto';
 import type {IContextSchemasService} from './context-schemas.service';
 import type {
   ContextSchema,
@@ -32,6 +33,18 @@ class ContextSchemasController extends BaseController<
     @Body() createContextSchemaDto: CreateContextSchemaDto,
   ): Promise<ContextSchemaDraft> {
     return this.create(createContextSchemaDto);
+  }
+
+  @Post(':key/versions')
+  @HttpCode(HttpStatus.CREATED)
+  createContextSchemaVersion(
+    @Param('key') key: string,
+    @Body() createContextSchemaVersionDto: CreateContextSchemaVersionDto,
+  ): Promise<ContextSchemaVersion> {
+    return this.contextSchemasService.createVersionByContextSchemaKey(
+      key,
+      createContextSchemaVersionDto,
+    );
   }
 
   @Get()

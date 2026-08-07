@@ -1,4 +1,4 @@
-import type {ContextSchemaPathValidationDiagnostic} from '../context/types';
+import type {ContextSchemaPathValidationDiagnostic} from '../context-schema-paths/types';
 import {RuleExpressionTypeValidationDiagnosticCode, RuleExpressionValueType} from './enums';
 
 type RuleExpressionInferredType = {

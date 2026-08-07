@@ -1,6 +1,13 @@
 import {IsNotEmpty, IsOptional, IsString, Matches, MaxLength} from 'class-validator';
 
 class CreateRuleDto {
+  @IsString()
+  @Matches(/^[a-z][a-z0-9_]*$/u, {
+    message: 'contextSchemaKey must contain only lowercase letters, numbers, and underscores',
+  })
+  @MaxLength(128)
+  readonly contextSchemaKey!: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(500)

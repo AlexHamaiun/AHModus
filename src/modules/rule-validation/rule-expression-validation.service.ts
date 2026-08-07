@@ -3,7 +3,7 @@ import {Inject, Injectable} from '@nestjs/common';
 import {Service} from '../../common/enums';
 import type {ContextSchemaDefinition} from '../context-schemas/types';
 import type {IRuleExpressionAstValidatorService} from './ast/rule-expression-ast-validator.service';
-import type {IContextSchemaPathValidatorService} from './context/context-schema-path-validator.service';
+import type {IContextSchemaPathValidatorService} from './context-schema-paths/context-schema-path-validator.service';
 import type {IRuleExpressionParserService} from './parser/rule-expression-parser.service';
 import type {IRuleExpressionTypeValidatorService} from './type/rule-expression-type-validator.service';
 import type {RuleExpressionValidationResult} from './types';

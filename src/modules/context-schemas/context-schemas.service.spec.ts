@@ -8,9 +8,14 @@ import {
   ContextSchemaValueType,
 } from './enums';
 import type {IContextSchemasRepository} from './context-schemas.repository';
-import {ContextSchemaValidatorService} from './context-schema-validator.service';
+import {ContextSchemaDefinitionValidatorService} from './context-schema-definition-validator.service';
 import {ContextSchemasService} from './context-schemas.service';
-import type {ContextSchemaDraft, ContextSchemaDefinition, CreateContextSchemaInput} from './types';
+import type {
+  ContextSchemaDraft,
+  ContextSchemaDefinition,
+  CreateContextSchemaInput,
+  CreateContextSchemaVersionInput,
+} from './types';
 
 describe('ContextSchemasService', () => {
   const createContextSchemaInput = {
@@ -58,14 +63,14 @@ describe('ContextSchemasService', () => {
   };
 
   const createService = (repository: IContextSchemasRepository) => {
-    const executeInTransaction = jest.fn((operation: () => Promise<ContextSchemaDraft>) =>
-      operation(),
+    const executeInTransaction = jest.fn(
+      async <TResult>(operation: () => Promise<TResult>): Promise<TResult> => operation(),
     );
     const databaseService = {executeInTransaction} as unknown as IDatabaseService;
     const service = new ContextSchemasService(
       databaseService,
       repository,
-      new ContextSchemaValidatorService(),
+      new ContextSchemaDefinitionValidatorService(),
     );
 
     return {executeInTransaction, service};
@@ -128,6 +133,24 @@ describe('ContextSchemasService', () => {
     expect(findByKey).toHaveBeenCalledWith('checkout-context');
   });
 
+  it('finds the active context schema version by key', async () => {
+    const contextSchemaDraft = createContextSchemaDraft();
+    const findByKey = jest.fn().mockResolvedValue(contextSchemaDraft.contextSchema);
+    const findActiveVersionByContextSchemaId = jest
+      .fn()
+      .mockResolvedValue(contextSchemaDraft.version);
+    const repository = {
+      findActiveVersionByContextSchemaId,
+      findByKey,
+    } as unknown as IContextSchemasRepository;
+    const {service} = createService(repository);
+
+    await expect(service.findActiveVersionByKey('checkout-context')).resolves.toEqual(
+      contextSchemaDraft.version,
+    );
+    expect(findActiveVersionByContextSchemaId).toHaveBeenCalledWith('context-schema-id');
+  });
+
   it('rejects an unknown context schema key', async () => {
     const findByKey = jest.fn().mockResolvedValue(undefined);
     const repository = {findByKey} as unknown as IContextSchemasRepository;
@@ -150,5 +173,61 @@ describe('ContextSchemasService', () => {
       contextSchemaDraft.version,
     ]);
     expect(findVersionsByContextSchemaId).toHaveBeenCalledWith('context-schema-id');
+  });
+
+  it('creates and activates the next version in one transaction', async () => {
+    const contextSchemaDraft = createContextSchemaDraft();
+    const input = {
+      definition: createContextSchemaInput.definition,
+    } satisfies CreateContextSchemaVersionInput;
+    const version = {
+      ...contextSchemaDraft.version,
+      id: 'next-context-schema-version-id',
+      version: 2,
+    };
+    const activatedContextSchema = {
+      ...contextSchemaDraft.contextSchema,
+      activeVersionId: version.id,
+    };
+    const findByKeyForUpdate = jest.fn().mockResolvedValue(contextSchemaDraft.contextSchema);
+    const createNextVersion = jest.fn().mockResolvedValue(version);
+    const activateVersion = jest.fn().mockResolvedValue(activatedContextSchema);
+    const repository = {
+      activateVersion,
+      createNextVersion,
+      findByKeyForUpdate,
+    } as unknown as IContextSchemasRepository;
+    const {executeInTransaction, service} = createService(repository);
+
+    await expect(
+      service.createVersionByContextSchemaKey('checkout-context', input),
+    ).resolves.toEqual(version);
+    expect(executeInTransaction).toHaveBeenCalledTimes(1);
+    expect(findByKeyForUpdate).toHaveBeenCalledWith('checkout-context');
+    expect(createNextVersion).toHaveBeenCalledWith('context-schema-id', input);
+    expect(activateVersion).toHaveBeenCalledWith(
+      'context-schema-id',
+      'next-context-schema-version-id',
+    );
+  });
+
+  it('rejects an invalid next version before opening a transaction', async () => {
+    const repository = {} as IContextSchemasRepository;
+    const {executeInTransaction, service} = createService(repository);
+    const input = {
+      definition: {
+        kind: ContextSchemaNodeKind.Object,
+        properties: [],
+      } as unknown as ContextSchemaDefinition,
+    } satisfies CreateContextSchemaVersionInput;
+
+    await expect(
+      service.createVersionByContextSchemaKey('checkout-context', input),
+    ).rejects.toMatchObject({
+      response: {
+        code: ContextSchemaValidationDiagnosticCode.InvalidNode,
+      },
+    });
+    expect(executeInTransaction).not.toHaveBeenCalled();
   });
 });

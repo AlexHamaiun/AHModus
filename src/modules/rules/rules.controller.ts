@@ -16,7 +16,7 @@ class RulesController extends BaseController<Rule, CreateRuleInput, UpdateRuleIn
   @Post()
   @HttpCode(HttpStatus.CREATED)
   createRule(@Body() createRuleDto: CreateRuleDto): Promise<RuleDraft> {
-    return this.create(createRuleDto);
+    return this.rulesService.createRuleByContextSchema(createRuleDto);
   }
 
   @Post(':key/versions')

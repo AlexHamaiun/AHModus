@@ -8,12 +8,14 @@ import {BaseService} from '../../infrastructure/database/base.service';
 import type {IDatabaseService} from '../../infrastructure/database/database.service';
 import {ContextSchemaEntityName} from './enums';
 import type {IContextSchemasRepository} from './context-schemas.repository';
-import type {IContextSchemaValidatorService} from './context-schema-validator.service';
+import type {IContextSchemaDefinitionValidatorService} from './context-schema-definition-validator.service';
 import type {
   ContextSchema,
+  ContextSchemaDefinition,
   ContextSchemaDraft,
   ContextSchemaVersion,
   CreateContextSchemaInput,
+  CreateContextSchemaVersionInput,
   UpdateContextSchemaInput,
 } from './types';
 
@@ -27,6 +29,11 @@ interface IContextSchemasService extends IBaseService<
     input: CreateContextSchemaInput,
     options?: TransactionOptions,
   ): Promise<ContextSchemaDraft>;
+  createVersionByContextSchemaKey(
+    key: string,
+    input: CreateContextSchemaVersionInput,
+  ): Promise<ContextSchemaVersion>;
+  findActiveVersionByKey(key: string): Promise<ContextSchemaVersion>;
   findByKey(key: string): Promise<ContextSchema>;
   findVersionsByContextSchemaKey(key: string): Promise<readonly ContextSchemaVersion[]>;
 }
@@ -45,8 +52,8 @@ class ContextSchemasService
     @Inject(Service.Database) databaseService: IDatabaseService,
     @Inject(Repository.ContextSchemas)
     private readonly contextSchemasRepository: IContextSchemasRepository,
-    @Inject(Service.ContextSchemaValidator)
-    private readonly contextSchemaValidatorService: IContextSchemaValidatorService,
+    @Inject(Service.ContextSchemaDefinitionValidator)
+    private readonly contextSchemaDefinitionValidatorService: IContextSchemaDefinitionValidatorService,
   ) {
     super(databaseService, contextSchemasRepository, ContextSchemaEntityName.ContextSchema);
   }
@@ -55,16 +62,32 @@ class ContextSchemasService
     input: CreateContextSchemaInput,
     options?: TransactionOptions,
   ): Promise<ContextSchemaDraft> {
-    const validationResult = this.contextSchemaValidatorService.validate(input.definition);
-
-    if (!validationResult.isValid) {
-      throw new BadRequestException({
-        code: validationResult.diagnostic.code,
-        message: validationResult.diagnostic.message,
-      });
-    }
+    this.validateDefinition(input.definition);
 
     return super.create(input, options);
+  }
+
+  async createVersionByContextSchemaKey(
+    key: string,
+    input: CreateContextSchemaVersionInput,
+  ): Promise<ContextSchemaVersion> {
+    this.validateDefinition(input.definition);
+
+    return this.executeMutation(async () => {
+      const contextSchema = EntityAssertions.require(
+        await this.contextSchemasRepository.findByKeyForUpdate(key),
+        ContextSchemaEntityName.ContextSchema,
+        'key',
+        key,
+      );
+      const version = await this.contextSchemasRepository.createNextVersion(
+        contextSchema.id,
+        input,
+      );
+      await this.contextSchemasRepository.activateVersion(contextSchema.id, version.id);
+
+      return version;
+    });
   }
 
   async findByKey(key: string): Promise<ContextSchema> {
@@ -74,6 +97,19 @@ class ContextSchemasService
       contextSchema,
       ContextSchemaEntityName.ContextSchema,
       'key',
+      key,
+    );
+  }
+
+  async findActiveVersionByKey(key: string): Promise<ContextSchemaVersion> {
+    const contextSchema = await this.findByKey(key);
+    const contextSchemaVersion =
+      await this.contextSchemasRepository.findActiveVersionByContextSchemaId(contextSchema.id);
+
+    return EntityAssertions.require(
+      contextSchemaVersion,
+      ContextSchemaEntityName.ContextSchemaVersion,
+      'context schema key',
       key,
     );
   }
@@ -88,6 +124,17 @@ class ContextSchemasService
     createContextSchemaInput: CreateContextSchemaInput,
   ): string {
     return `Entity "${ContextSchemaEntityName.ContextSchema}" with key "${createContextSchemaInput.key}" already exists.`;
+  }
+
+  private validateDefinition(definition: unknown): asserts definition is ContextSchemaDefinition {
+    const validationResult = this.contextSchemaDefinitionValidatorService.validate(definition);
+
+    if (!validationResult.isValid) {
+      throw new BadRequestException({
+        code: validationResult.diagnostic.code,
+        message: validationResult.diagnostic.message,
+      });
+    }
   }
 }
 

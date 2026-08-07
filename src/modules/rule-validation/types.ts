@@ -1,5 +1,5 @@
 import type {RuleExpressionAstValidationDiagnostic} from './ast/types';
-import type {ContextSchemaPathValidationDiagnostic} from './context/types';
+import type {ContextSchemaPathValidationDiagnostic} from './context-schema-paths/types';
 import type {RuleExpressionParseDiagnostic} from './parser/types';
 import type {RuleExpressionTypeValidationDiagnostic} from './type/types';
 

@@ -8,6 +8,7 @@ type Rule = InferSelectModel<typeof rules>;
 type RuleVersion = InferSelectModel<typeof ruleVersions>;
 
 type CreateRuleInput = {
+  readonly contextSchemaKey: string;
   readonly description?: string;
   readonly expression: string;
   readonly key: string;
@@ -15,7 +16,16 @@ type CreateRuleInput = {
 };
 
 type CreateRuleVersionInput = {
+  readonly contextSchemaKey: string;
   readonly expression: string;
+};
+
+type CreateRuleResolvedInput = Omit<CreateRuleInput, 'contextSchemaKey'> & {
+  readonly contextSchemaVersionId: string;
+};
+
+type CreateRuleVersionResolvedInput = Omit<CreateRuleVersionInput, 'contextSchemaKey'> & {
+  readonly contextSchemaVersionId: string;
 };
 
 type RuleDraft = {
@@ -30,7 +40,9 @@ type UpdateRuleInput = {
 
 export {
   type CreateRuleInput,
+  type CreateRuleResolvedInput,
   type CreateRuleVersionInput,
+  type CreateRuleVersionResolvedInput,
   type NewRule,
   type NewRuleVersion,
   type Rule,

@@ -4,7 +4,7 @@ import {Repository, Service} from '../../common/enums';
 import {ContextSchemasController} from './context-schemas.controller';
 import {ContextSchemasRepository} from './context-schemas.repository';
 import {ContextSchemasService} from './context-schemas.service';
-import {ContextSchemaValidatorService} from './context-schema-validator.service';
+import {ContextSchemaDefinitionValidatorService} from './context-schema-definition-validator.service';
 
 @Module({
   controllers: [ContextSchemasController],
@@ -14,8 +14,8 @@ import {ContextSchemaValidatorService} from './context-schema-validator.service'
       useClass: ContextSchemasRepository,
     },
     {
-      provide: Service.ContextSchemaValidator,
-      useClass: ContextSchemaValidatorService,
+      provide: Service.ContextSchemaDefinitionValidator,
+      useClass: ContextSchemaDefinitionValidatorService,
     },
     {
       provide: Service.ContextSchemas,

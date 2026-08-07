@@ -5,7 +5,7 @@ import {Service} from '../../../common/enums';
 import {ContextSchemaNodeKind, ContextSchemaValueType} from '../../context-schemas/enums';
 import type {ContextSchemaDefinition, ContextSchemaValueNode} from '../../context-schemas/types';
 import type {RuleExpressionAst} from '../parser/types';
-import type {IContextSchemaPathResolverService} from '../context/context-schema-path-resolver.service';
+import type {IContextSchemaPathResolverService} from '../context-schema-paths/context-schema-path-resolver.service';
 import {RuleExpressionTypeValidationDiagnosticCode, RuleExpressionValueType} from './enums';
 import type {
   RuleExpressionInferredType,

@@ -27,6 +27,10 @@ interface IContextSchemasRepository extends IBaseRepository<
     contextSchemaId: string,
     input: CreateContextSchemaVersionInput,
   ): Promise<ContextSchemaVersion>;
+  activateVersion(contextSchemaId: string, versionId: string): Promise<ContextSchema>;
+  findActiveVersionByContextSchemaId(
+    contextSchemaId: string,
+  ): Promise<ContextSchemaVersion | undefined>;
   findByKey(key: string): Promise<ContextSchema | undefined>;
   findByKeyForUpdate(key: string): Promise<ContextSchema | undefined>;
   findVersionsByContextSchemaId(contextSchemaId: string): Promise<readonly ContextSchemaVersion[]>;
@@ -66,19 +70,7 @@ class ContextSchemasRepository
       definition: input.definition,
     });
 
-    const activatedContextSchemas = await this.database
-      .update(contextSchemas)
-      .set({
-        activeVersionId: version.id,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(contextSchemas.id, contextSchema.id), isNull(contextSchemas.archivedAt)))
-      .returning();
-
-    const activatedContextSchema = DatabaseAssertions.requireSingleResult(
-      activatedContextSchemas,
-      ContextSchemaEntityName.ContextSchema,
-    );
+    const activatedContextSchema = await this.activateVersion(contextSchema.id, version.id);
 
     return {
       contextSchema: activatedContextSchema,
@@ -111,6 +103,22 @@ class ContextSchemasRepository
     return DatabaseAssertions.requireSingleResult(
       insertedContextSchemaVersions,
       ContextSchemaEntityName.ContextSchemaVersion,
+    );
+  }
+
+  async activateVersion(contextSchemaId: string, versionId: string): Promise<ContextSchema> {
+    const activatedContextSchemas = await this.database
+      .update(contextSchemas)
+      .set({
+        activeVersionId: versionId,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(contextSchemas.id, contextSchemaId), isNull(contextSchemas.archivedAt)))
+      .returning();
+
+    return DatabaseAssertions.requireSingleResult(
+      activatedContextSchemas,
+      ContextSchemaEntityName.ContextSchema,
     );
   }
 
@@ -148,6 +156,21 @@ class ContextSchemasRepository
       .for('update');
 
     return contextSchema;
+  }
+
+  async findActiveVersionByContextSchemaId(
+    contextSchemaId: string,
+  ): Promise<ContextSchemaVersion | undefined> {
+    const [result] = await this.database
+      .select({version: contextSchemaVersions})
+      .from(contextSchemas)
+      .innerJoin(
+        contextSchemaVersions,
+        eq(contextSchemas.activeVersionId, contextSchemaVersions.id),
+      )
+      .where(and(eq(contextSchemas.id, contextSchemaId), isNull(contextSchemas.archivedAt)));
+
+    return result?.version;
   }
 
   async findVersionsByContextSchemaId(

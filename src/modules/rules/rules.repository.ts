@@ -9,8 +9,8 @@ import type {IBaseRepository} from '../../infrastructure/database/interfaces';
 import {rules, ruleVersions} from '../../infrastructure/database/schema';
 import {RuleEntityName} from './enums';
 import type {
-  CreateRuleInput,
-  CreateRuleVersionInput,
+  CreateRuleResolvedInput,
+  CreateRuleVersionResolvedInput,
   Rule,
   RuleDraft,
   RuleVersion,
@@ -19,11 +19,11 @@ import type {
 
 interface IRulesRepository extends IBaseRepository<
   Rule,
-  CreateRuleInput,
+  CreateRuleResolvedInput,
   UpdateRuleInput,
   RuleDraft
 > {
-  createNextVersion(ruleId: string, input: CreateRuleVersionInput): Promise<RuleVersion>;
+  createNextVersion(ruleId: string, input: CreateRuleVersionResolvedInput): Promise<RuleVersion>;
   findByKey(key: string): Promise<Rule | undefined>;
   findByKeyForUpdate(key: string): Promise<Rule | undefined>;
   findVersionsByRuleId(ruleId: string): Promise<readonly RuleVersion[]>;
@@ -31,14 +31,14 @@ interface IRulesRepository extends IBaseRepository<
 
 @Injectable()
 class RulesRepository
-  extends BaseRepository<Rule, CreateRuleInput, UpdateRuleInput, RuleDraft>
+  extends BaseRepository<Rule, CreateRuleResolvedInput, UpdateRuleInput, RuleDraft>
   implements IRulesRepository
 {
   constructor(@Inject(Service.Database) databaseService: IDatabaseService) {
     super(databaseService);
   }
 
-  async create(input: CreateRuleInput): Promise<RuleDraft> {
+  async create(input: CreateRuleResolvedInput): Promise<RuleDraft> {
     const insertedRules = await this.database
       .insert(rules)
       .values({
@@ -49,23 +49,18 @@ class RulesRepository
       .returning();
     const rule = DatabaseAssertions.requireSingleResult(insertedRules, RuleEntityName.Rule);
 
-    const insertedRuleVersions = await this.database
-      .insert(ruleVersions)
-      .values({
-        expression: input.expression,
-        ruleId: rule.id,
-        version: 1,
-      })
-      .returning();
-    const version = DatabaseAssertions.requireSingleResult(
-      insertedRuleVersions,
-      RuleEntityName.RuleVersion,
-    );
+    const version = await this.createNextVersion(rule.id, {
+      contextSchemaVersionId: input.contextSchemaVersionId,
+      expression: input.expression,
+    });
 
     return {rule, version};
   }
 
-  async createNextVersion(ruleId: string, input: CreateRuleVersionInput): Promise<RuleVersion> {
+  async createNextVersion(
+    ruleId: string,
+    input: CreateRuleVersionResolvedInput,
+  ): Promise<RuleVersion> {
     const [latestVersion] = await this.database
       .select({version: ruleVersions.version})
       .from(ruleVersions)
@@ -77,6 +72,7 @@ class RulesRepository
     const insertedRuleVersions = await this.database
       .insert(ruleVersions)
       .values({
+        contextSchemaVersionId: input.contextSchemaVersionId,
         expression: input.expression,
         ruleId,
         version: nextVersion,

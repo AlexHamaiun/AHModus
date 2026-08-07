@@ -13,12 +13,13 @@ abstract class BaseService<
   TUpdateInput,
   TCreateResult = TEntity,
   TId = string,
+  TRepositoryCreateInput = TCreateInput,
 > implements IBaseService<TEntity, TCreateInput, TUpdateInput, TCreateResult, TId> {
   protected constructor(
     private readonly databaseService: IDatabaseService,
     private readonly repository: IBaseRepository<
       TEntity,
-      TCreateInput,
+      TRepositoryCreateInput,
       TUpdateInput,
       TCreateResult,
       TId
@@ -28,7 +29,10 @@ abstract class BaseService<
 
   async create(input: TCreateInput, options?: TransactionOptions): Promise<TCreateResult> {
     try {
-      return await this.executeMutation(() => this.repository.create(input), options);
+      return await this.executeMutation(
+        () => this.repository.create(input as unknown as TRepositoryCreateInput),
+        options,
+      );
     } catch (error: unknown) {
       this.throwCreateError(error, input);
     }
@@ -67,7 +71,7 @@ abstract class BaseService<
     return `Entity "${this.entityName}" with the same unique value already exists.`;
   }
 
-  private throwCreateError(error: unknown, input: TCreateInput): never {
+  protected throwCreateError(error: unknown, input: TCreateInput): never {
     if (hasPostgresErrorCode(error, PostgresErrorCode.UniqueViolation)) {
       throw new ConflictException(this.getDuplicateCreateMessage(input));
     }

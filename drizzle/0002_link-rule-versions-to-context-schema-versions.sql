@@ -1,0 +1,2 @@
+ALTER TABLE "rule_versions" ADD COLUMN "context_schema_version_id" uuid NOT NULL;--> statement-breakpoint
+ALTER TABLE "rule_versions" ADD CONSTRAINT "rule_versions_context_schema_version_id_context_schema_versions_id_fk" FOREIGN KEY ("context_schema_version_id") REFERENCES "public"."context_schema_versions"("id") ON DELETE restrict ON UPDATE no action;

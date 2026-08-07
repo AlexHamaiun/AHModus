@@ -4,10 +4,10 @@ import {
   ContextSchemaValidationLimit,
   ContextSchemaValueType,
 } from './enums';
-import {ContextSchemaValidatorService} from './context-schema-validator.service';
+import {ContextSchemaDefinitionValidatorService} from './context-schema-definition-validator.service';
 
-describe('ContextSchemaValidatorService', () => {
-  const validator = new ContextSchemaValidatorService();
+describe('ContextSchemaDefinitionValidatorService', () => {
+  const validator = new ContextSchemaDefinitionValidatorService();
 
   it('accepts a valid context schema', () => {
     const result = validator.validate({

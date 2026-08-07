@@ -13,6 +13,7 @@ import {
 
 import {RuleVersionValidationStatus} from '../../../modules/rules/enums';
 import type {IRuleVersionValidationResult} from '../../../modules/rules/interfaces';
+import {contextSchemaVersions} from './context-schemas';
 
 const ruleVersionValidationStatusEnum = pgEnum('rule_version_validation_status', [
   RuleVersionValidationStatus.Pending,
@@ -44,6 +45,9 @@ const ruleVersions = pgTable(
     ruleId: uuid('rule_id')
       .notNull()
       .references((): AnyPgColumn => rules.id, {onDelete: 'restrict'}),
+    contextSchemaVersionId: uuid('context_schema_version_id')
+      .notNull()
+      .references((): AnyPgColumn => contextSchemaVersions.id, {onDelete: 'restrict'}),
     version: integer('version').notNull(),
     expression: text('expression').notNull(),
     validationStatus: ruleVersionValidationStatusEnum('validation_status')

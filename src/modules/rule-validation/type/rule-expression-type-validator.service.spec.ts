@@ -1,4 +1,4 @@
-import {ContextSchemaPathResolverService} from '../context/context-schema-path-resolver.service';
+import {ContextSchemaPathResolverService} from '../context-schema-paths/context-schema-path-resolver.service';
 import {ContextSchemaNodeKind, ContextSchemaValueType} from '../../context-schemas/enums';
 import type {ContextSchemaDefinition} from '../../context-schemas/types';
 import {RuleExpressionParserService} from '../parser/rule-expression-parser.service';
