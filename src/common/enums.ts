@@ -16,6 +16,7 @@ enum Service {
 enum Repository {
   ContextSchemas = 'contextSchemasRepository',
   Rules = 'rulesRepository',
+  RuleVersions = 'ruleVersionsRepository',
 }
 
 enum Resource {

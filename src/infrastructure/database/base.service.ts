@@ -1,11 +1,8 @@
-import {ConflictException} from '@nestjs/common';
-
 import type {IBaseService} from '../../common/interfaces';
 import type {TransactionOptions} from '../../common/types';
+import {PostgresErrorTranslator} from './postgres-error.translator';
 import type {IDatabaseService} from './database.service';
-import {PostgresErrorCode} from './enums';
 import type {IBaseRepository} from './interfaces';
-import {hasPostgresErrorCode} from './postgres-error.guard';
 
 abstract class BaseService<
   TEntity,
@@ -13,13 +10,12 @@ abstract class BaseService<
   TUpdateInput,
   TCreateResult = TEntity,
   TId = string,
-  TRepositoryCreateInput = TCreateInput,
 > implements IBaseService<TEntity, TCreateInput, TUpdateInput, TCreateResult, TId> {
   protected constructor(
     private readonly databaseService: IDatabaseService,
     private readonly repository: IBaseRepository<
       TEntity,
-      TRepositoryCreateInput,
+      TCreateInput,
       TUpdateInput,
       TCreateResult,
       TId
@@ -29,12 +25,9 @@ abstract class BaseService<
 
   async create(input: TCreateInput, options?: TransactionOptions): Promise<TCreateResult> {
     try {
-      return await this.executeMutation(
-        () => this.repository.create(input as unknown as TRepositoryCreateInput),
-        options,
-      );
+      return await this.executeMutation(() => this.repository.create(input), options);
     } catch (error: unknown) {
-      this.throwCreateError(error, input);
+      PostgresErrorTranslator.rethrowCreateError(error, this.getDuplicateCreateMessage(input));
     }
   }
 
@@ -69,14 +62,6 @@ abstract class BaseService<
     void input;
 
     return `Entity "${this.entityName}" with the same unique value already exists.`;
-  }
-
-  protected throwCreateError(error: unknown, input: TCreateInput): never {
-    if (hasPostgresErrorCode(error, PostgresErrorCode.UniqueViolation)) {
-      throw new ConflictException(this.getDuplicateCreateMessage(input));
-    }
-
-    throw error;
   }
 }
 

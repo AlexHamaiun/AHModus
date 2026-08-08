@@ -8,7 +8,7 @@ import type {IRulesService} from './rules.service';
 import type {CreateRuleInput, Rule, RuleDraft, RuleVersion, UpdateRuleInput} from './types';
 
 @Controller(Resource.Rules)
-class RulesController extends BaseController<Rule, CreateRuleInput, UpdateRuleInput, RuleDraft> {
+class RulesController extends BaseController<Rule, CreateRuleInput, UpdateRuleInput> {
   constructor(@Inject(Service.Rules) private readonly rulesService: IRulesService) {
     super(rulesService);
   }
@@ -16,7 +16,7 @@ class RulesController extends BaseController<Rule, CreateRuleInput, UpdateRuleIn
   @Post()
   @HttpCode(HttpStatus.CREATED)
   createRule(@Body() createRuleDto: CreateRuleDto): Promise<RuleDraft> {
-    return this.rulesService.createRuleByContextSchema(createRuleDto);
+    return this.rulesService.createByContextSchema(createRuleDto);
   }
 
   @Post(':key/versions')

@@ -5,6 +5,7 @@ import {ContextSchemasModule} from '../context-schemas/context-schemas.module';
 import {RuleValidationModule} from '../rule-validation/rule-validation.module';
 import {RulesController} from './rules.controller';
 import {RulesRepository} from './rules.repository';
+import {RuleVersionsRepository} from './rule-versions.repository';
 import {RulesService} from './rules.service';
 
 @Module({
@@ -14,6 +15,10 @@ import {RulesService} from './rules.service';
     {
       provide: Repository.Rules,
       useClass: RulesRepository,
+    },
+    {
+      provide: Repository.RuleVersions,
+      useClass: RuleVersionsRepository,
     },
     {
       provide: Service.Rules,

@@ -1,44 +1,30 @@
 import {Inject, Injectable} from '@nestjs/common';
-import {and, asc, desc, eq, isNull} from 'drizzle-orm';
+import {and, asc, eq, isNull} from 'drizzle-orm';
 
 import {Service} from '../../common/enums';
 import {DatabaseAssertions} from '../../infrastructure/database/assertions/database.assertions';
 import {BaseRepository} from '../../infrastructure/database/base.repository';
 import type {IDatabaseService} from '../../infrastructure/database/database.service';
 import type {IBaseRepository} from '../../infrastructure/database/interfaces';
-import {rules, ruleVersions} from '../../infrastructure/database/schema';
+import {rules} from '../../infrastructure/database/schema';
 import {RuleEntityName} from './enums';
-import type {
-  CreateRuleResolvedInput,
-  CreateRuleVersionResolvedInput,
-  Rule,
-  RuleDraft,
-  RuleVersion,
-  UpdateRuleInput,
-} from './types';
+import type {CreateRuleInput, Rule, UpdateRuleInput} from './types';
 
-interface IRulesRepository extends IBaseRepository<
-  Rule,
-  CreateRuleResolvedInput,
-  UpdateRuleInput,
-  RuleDraft
-> {
-  createNextVersion(ruleId: string, input: CreateRuleVersionResolvedInput): Promise<RuleVersion>;
+interface IRulesRepository extends IBaseRepository<Rule, CreateRuleInput, UpdateRuleInput> {
   findByKey(key: string): Promise<Rule | undefined>;
   findByKeyForUpdate(key: string): Promise<Rule | undefined>;
-  findVersionsByRuleId(ruleId: string): Promise<readonly RuleVersion[]>;
 }
 
 @Injectable()
 class RulesRepository
-  extends BaseRepository<Rule, CreateRuleResolvedInput, UpdateRuleInput, RuleDraft>
+  extends BaseRepository<Rule, CreateRuleInput, UpdateRuleInput>
   implements IRulesRepository
 {
   constructor(@Inject(Service.Database) databaseService: IDatabaseService) {
     super(databaseService);
   }
 
-  async create(input: CreateRuleResolvedInput): Promise<RuleDraft> {
+  async create(input: CreateRuleInput): Promise<Rule> {
     const insertedRules = await this.database
       .insert(rules)
       .values({
@@ -47,39 +33,8 @@ class RulesRepository
         name: input.name,
       })
       .returning();
-    const rule = DatabaseAssertions.requireSingleResult(insertedRules, RuleEntityName.Rule);
 
-    const version = await this.createNextVersion(rule.id, {
-      contextSchemaVersionId: input.contextSchemaVersionId,
-      expression: input.expression,
-    });
-
-    return {rule, version};
-  }
-
-  async createNextVersion(
-    ruleId: string,
-    input: CreateRuleVersionResolvedInput,
-  ): Promise<RuleVersion> {
-    const [latestVersion] = await this.database
-      .select({version: ruleVersions.version})
-      .from(ruleVersions)
-      .where(eq(ruleVersions.ruleId, ruleId))
-      .orderBy(desc(ruleVersions.version))
-      .limit(1);
-    const nextVersion = latestVersion === undefined ? 1 : latestVersion.version + 1;
-
-    const insertedRuleVersions = await this.database
-      .insert(ruleVersions)
-      .values({
-        contextSchemaVersionId: input.contextSchemaVersionId,
-        expression: input.expression,
-        ruleId,
-        version: nextVersion,
-      })
-      .returning();
-
-    return DatabaseAssertions.requireSingleResult(insertedRuleVersions, RuleEntityName.RuleVersion);
+    return DatabaseAssertions.requireSingleResult(insertedRules, RuleEntityName.Rule);
   }
 
   async findAll(): Promise<readonly Rule[]> {
@@ -116,14 +71,6 @@ class RulesRepository
       .for('update');
 
     return rule;
-  }
-
-  async findVersionsByRuleId(ruleId: string): Promise<readonly RuleVersion[]> {
-    return this.database
-      .select()
-      .from(ruleVersions)
-      .where(eq(ruleVersions.ruleId, ruleId))
-      .orderBy(asc(ruleVersions.version));
   }
 
   async remove(id: string): Promise<Rule> {
