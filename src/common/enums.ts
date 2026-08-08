@@ -9,6 +9,7 @@ enum Service {
   RuleExpressionParser = 'ruleExpressionParser',
   RuleExpressionValidation = 'ruleExpressionValidation',
   RuleExpressionTypeValidator = 'ruleExpressionTypeValidator',
+  Logging = 'logging',
   ContextSchemas = 'contextSchemas',
   Rules = 'rules',
 }

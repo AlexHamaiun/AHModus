@@ -21,6 +21,26 @@ The health check is available at `GET /v1/health`.
 for a reproducible installation; do not use `npm update` without an explicit
 dependency-update task and test run.
 
+## HTTP logging
+
+AHModus uses Pino through `nestjs-pino`. Every HTTP request receives an
+`X-Request-Id`: a valid incoming value is preserved; otherwise the API generates
+a UUID and returns it in the response header. The same ID is automatically bound
+to the entry, completion/error and any future Pino logs emitted while that
+request is being processed through `AsyncLocalStorage`.
+
+Logs are JSON and intentionally include only request ID, HTTP method, path,
+response status and duration. Request bodies, query parameters and headers are
+not logged. Configure the minimum severity with `LOG_LEVEL`; its default is
+`info`.
+
+Every application-owned log event has an event code, recorded both as the
+structured `eventCode` field and at the start of `msg` — for example,
+`[NCSF0001] Notification was created.` By convention, codes use an uppercase
+abbreviation and a four-digit sequence. Each module owns its codes in its
+`enums.ts`; application code uses the global `LoggingService` rather than
+`PinoLogger` directly.
+
 ## Verification
 
 Run the unit test suite:

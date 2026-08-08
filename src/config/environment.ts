@@ -1,11 +1,14 @@
 import type {IEnvironmentVariables} from './interfaces';
+import type {LogLevel} from './types';
 
 export function validateEnvironment(config: Record<string, unknown>): IEnvironmentVariables {
   const databaseUrl = getRequiredString(config, 'DATABASE_URL');
+  const logLevel = getLogLevel(config.LOG_LEVEL);
   const port = getPort(config.PORT);
 
   return {
     DATABASE_URL: databaseUrl,
+    LOG_LEVEL: logLevel,
     PORT: port,
   };
 }
@@ -31,4 +34,26 @@ function getPort(value: unknown): number {
   }
 
   return port;
+}
+
+function getLogLevel(value: unknown): LogLevel {
+  if (value === undefined || value === '') {
+    return 'info';
+  }
+
+  if (typeof value !== 'string') {
+    throw new Error('LOG_LEVEL must be trace, debug, info, warn, error, or fatal.');
+  }
+
+  switch (value) {
+    case 'trace':
+    case 'debug':
+    case 'info':
+    case 'warn':
+    case 'error':
+    case 'fatal':
+      return value;
+    default:
+      throw new Error('LOG_LEVEL must be trace, debug, info, warn, error, or fatal.');
+  }
 }
